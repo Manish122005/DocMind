@@ -1,13 +1,25 @@
+
 import faiss
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+_model = None
+
+
+def get_model():
+    global _model
+
+    if _model is None:
+        _model = SentenceTransformer("all-MiniLM-L6-v2")
+
+    return _model
 
 
 def search_chunks(chunks, query, top_k=3):
     if not chunks or not query.strip():
         return []
+
+    model = get_model()
 
     vectors = model.encode(chunks, normalize_embeddings=True)
     vectors = np.asarray(vectors, dtype="float32")
@@ -25,6 +37,7 @@ def search_chunks(chunks, query, top_k=3):
     scores, indices = index.search(query_vector, k)
 
     results = []
+
     for score, idx in zip(scores[0], indices[0]):
         if idx >= 0:
             results.append({
